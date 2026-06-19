@@ -16,10 +16,12 @@
     deck: [],         // 当前正在刷的题目序列
     idx: 0,
     view: "practice", // practice | wrong | settings
-    mode: "seq",      // seq | rand
+    mode: "rand",     // seq | rand（默认随机）
     filter: "all",
+    threshold: 2,     // 错题需连续答对几次才移出错题本
+    cardLocked: false,// 当前卡片本次是否已作答
     records: {},      // origId -> { answer, correct }
-    wrong: {},        // origId -> true
+    wrong: {},        // origId -> 剩余需答对次数
     idxByView: { practice: 0, wrong: 0 },
   };
 
@@ -28,15 +30,23 @@
     try {
       var d = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
       state.records = d.records || {};
-      state.wrong = d.wrong || {};
-      state.mode = d.mode || "seq";
+      state.mode = d.mode || "rand";
       state.filter = d.filter || "all";
+      state.threshold = d.threshold >= 1 ? d.threshold : 2;
+      // 错题：兼容旧版布尔值，统一为剩余需答对次数
+      state.wrong = {};
+      var w = d.wrong || {};
+      Object.keys(w).forEach(function (k) {
+        var v = w[k];
+        state.wrong[k] = (typeof v === "number" && v >= 1) ? v : state.threshold;
+      });
     } catch (e) {}
   }
   function save() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
-        records: state.records, wrong: state.wrong, mode: state.mode, filter: state.filter,
+        records: state.records, wrong: state.wrong,
+        mode: state.mode, filter: state.filter, threshold: state.threshold,
       }));
     } catch (e) {}
   }
@@ -125,6 +135,7 @@
     card.classList.remove("hidden");
     $("settingsView").classList.add("hidden");
     card.innerHTML = "";
+    state.cardLocked = false;
 
     var q = state.deck[state.idx];
     if (!q) {
@@ -133,11 +144,16 @@
       refreshChrome();
       return;
     }
-    var rec = state.records[q.origId];
+    // 错题本始终呈现原始题目供二次作答；刷题页回显历史作答
+    var rec = state.view === "wrong" ? null : state.records[q.origId];
 
     var head = el("div", "q-head");
     head.appendChild(el("span", "type-tag", TYPE_LABEL[q.type]));
     (q.points || []).forEach(function (p) { head.appendChild(el("span", "points-tag", p)); });
+    if (state.view === "wrong") {
+      var left = state.wrong[q.origId];
+      head.appendChild(el("span", "points-tag", "再答对 " + left + " 次移出"));
+    }
     card.appendChild(head);
 
     card.appendChild(el("p", "q-text", q.question));
@@ -156,7 +172,7 @@
       card.appendChild(actions);
     }
 
-    if (rec) showAnswered(q, rec);
+    if (rec) { state.cardLocked = true; showAnswered(q, rec); }
     refreshChrome();
   }
 
@@ -170,7 +186,7 @@
       var txt = el("span", "opt-text", o.text);
       row.appendChild(key); row.appendChild(txt);
       row.addEventListener("click", function () {
-        if (state.records[q.origId]) return; // 已作答
+        if (state.cardLocked) return; // 本卡已作答
         if (multi) {
           row.classList.toggle("selected");
         } else {
@@ -196,7 +212,7 @@
   /* ---------- 提交与反馈 ---------- */
   function onSubmit() {
     var q = state.deck[state.idx];
-    if (!q || state.records[q.origId]) return;
+    if (!q || state.cardLocked) return;
     var ua;
     if (q.type === "blank") {
       var inp = $("blankInput");
@@ -211,10 +227,21 @@
   }
 
   function submitAnswer(q, ua) {
+    state.cardLocked = true;
     var correct = judge(q, ua);
     state.records[q.origId] = { answer: ua, correct: correct };
-    if (correct) delete state.wrong[q.origId];
-    else state.wrong[q.origId] = true;
+
+    if (correct) {
+      // 在错题本中：连续答对递减，归零则移出
+      if (state.wrong[q.origId] != null) {
+        var left = state.wrong[q.origId] - 1;
+        if (left <= 0) delete state.wrong[q.origId];
+        else state.wrong[q.origId] = left;
+      }
+    } else {
+      // 答错：重置为需答对 threshold 次
+      state.wrong[q.origId] = state.threshold;
+    }
     save();
     showAnswered(q, state.records[q.origId]);
     refreshChrome();
@@ -278,8 +305,7 @@
     fb.textContent = msg;
     clearTimeout(flashTimer);
     flashTimer = setTimeout(function () {
-      var q = state.deck[state.idx];
-      if (q && !state.records[q.origId]) fb.className = "feedback";
+      if (!state.cardLocked) fb.className = "feedback";
     }, 1400);
   }
 
@@ -327,6 +353,13 @@
     state.idxByView = { practice: 0, wrong: 0 };
   }
 
+  function setThreshold(n) {
+    n = Math.max(1, Math.min(9, n || 1));
+    state.threshold = n;
+    $("thValue").textContent = n;
+    save();
+  }
+
   function bindEvents() {
     $("prevBtn").addEventListener("click", function () { go(-1); });
     $("nextBtn").addEventListener("click", function () { go(1); });
@@ -335,6 +368,9 @@
 
     $("modeSeq").addEventListener("click", function () { setMode("seq"); });
     $("modeRand").addEventListener("click", function () { setMode("rand"); });
+
+    $("thMinus").addEventListener("click", function () { setThreshold(state.threshold - 1); });
+    $("thPlus").addEventListener("click", function () { setThreshold(state.threshold + 1); });
     $("typeFilter").addEventListener("change", function () {
       state.filter = this.value; save();
       state.idxByView.practice = 0;
@@ -385,6 +421,7 @@
         $("typeFilter").value = state.filter;
         $("modeSeq").classList.toggle("active", state.mode === "seq");
         $("modeRand").classList.toggle("active", state.mode === "rand");
+        $("thValue").textContent = state.threshold;
         $("metaInfo").textContent = "题库共 " + data.length + " 题";
         bindEvents();
         showView("practice");

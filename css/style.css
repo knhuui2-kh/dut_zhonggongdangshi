@@ -288,6 +288,21 @@ html, body {
   font-size: 0.92rem;
 }
 .btn-ghost.danger { color: var(--red); border-color: var(--red-soft); width: 100%; }
+.btn-ghost.step {
+  width: 44px;
+  padding: 9px 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+}
+.th-value {
+  min-width: 48px;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
 .set-meta { font-size: 0.78rem; color: var(--muted); margin: 0; }
 
 .empty { text-align: center; color: var(--muted); padding: 36px 0; width: 100%; }
