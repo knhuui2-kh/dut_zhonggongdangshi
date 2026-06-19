@@ -8,13 +8,19 @@
 
   var DATA_FILE = "data/questions.json"; // 全量 1486 题（demo: data/demo.json）
   var STORE_KEY = "zgds_quiz_v1";
+  var ORDER_VERSION = 2; // 顺序生成算法版本：变更后自动按新规则重建顺序
   var TYPE_LABEL = { single: "单选题", multiple: "多选题", judge: "判断题", blank: "填空题" };
   var VIEW_TITLE = { practice: "题库挑战", wrong: "错题本", settings: "设置" };
+
+  // 每 100 题一组的题型配额与排列顺序（按总体占比：单选/多选各30，判断/填空各20）
+  var TYPE_SEQUENCE = ["single", "multiple", "judge", "blank"];
+  var GROUP_QUOTA = { single: 30, multiple: 30, judge: 20, blank: 20 };
 
   var state = {
     all: [],
     byId: {},         // origId -> 题目
-    order: [],        // 固定随机顺序（origId 数组），首次生成后持久化
+    order: [],        // 固定顺序（origId 数组），首次生成后持久化
+    orderVersion: 0,  // 已存顺序所用算法版本
     deck: [],         // 当前正在刷的题目序列
     idx: 0,
     view: "practice", // practice | wrong | settings
@@ -32,6 +38,7 @@
       state.records = d.records || {};
       state.threshold = d.threshold >= 1 ? d.threshold : 2;
       state.order = Array.isArray(d.order) ? d.order : [];
+      state.orderVersion = d.orderVersion || 0;
       state.idxByView = d.idxByView || { practice: 0, wrong: 0 };
       // 错题：兼容旧版布尔值，统一为剩余需答对次数
       state.wrong = {};
@@ -45,8 +52,8 @@
   function save() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
-        records: state.records, wrong: state.wrong,
-        threshold: state.threshold, order: state.order, idxByView: state.idxByView,
+        records: state.records, wrong: state.wrong, threshold: state.threshold,
+        order: state.order, orderVersion: state.orderVersion, idxByView: state.idxByView,
       }));
     } catch (e) {}
   }
@@ -91,13 +98,34 @@
   }
 
   /* ---------- 牌组构建 ---------- */
-  // 题库牌组：全部题目，按固定随机顺序（state.order）排列
+  // 题库牌组：全部题目，按固定顺序（state.order）排列
   function practiceDeck() {
     return state.order.map(function (id) { return state.byId[id]; }).filter(Boolean);
   }
   // 错题牌组：错题集合，沿用同一固定顺序
   function wrongDeck() {
     return practiceDeck().filter(function (q) { return state.wrong[q.origId]; });
+  }
+
+  // 结构化顺序：每 100 题一组，组内按 单选→多选→判断→填空 排列；
+  // 每题型内部随机抽取（每人独立随机、打开后固定）。题型用尽后跳过其配额。
+  function buildStructuredOrder(data) {
+    var pools = {};
+    TYPE_SEQUENCE.forEach(function (t) {
+      pools[t] = shuffle(data.filter(function (q) { return q.type === t; })
+        .map(function (q) { return q.origId; }));
+    });
+    var order = [];
+    var remaining = function () {
+      return TYPE_SEQUENCE.reduce(function (s, t) { return s + pools[t].length; }, 0);
+    };
+    while (remaining() > 0) {
+      TYPE_SEQUENCE.forEach(function (t) {
+        var take = Math.min(GROUP_QUOTA[t], pools[t].length);
+        for (var i = 0; i < take; i++) order.push(pools[t].shift());
+      });
+    }
+    return order;
   }
 
   /* ---------- 顶栏 / 标签状态 ---------- */
@@ -410,17 +438,22 @@
         state.byId = {};
         data.forEach(function (q) { state.byId[q.origId] = q; });
 
-        // 固定随机顺序：首次生成并持久化；之后始终沿用，切换 tab 不重洗。
-        // 同时补齐题库新增/缺失的题目，保证可刷题数为全部最大值。
+        // 固定顺序：版本一致且完整则沿用；否则按当前规则重建（结构化分组）。
+        // 进度/错题以 origId 记录，重建顺序不丢数据。
+        var ids = data.map(function (q) { return q.origId; });
         var present = {};
         var validOrder = state.order.filter(function (id) {
           if (state.byId[id] && !present[id]) { present[id] = true; return true; }
           return false;
         });
-        var missing = data.map(function (q) { return q.origId; })
-          .filter(function (id) { return !present[id]; });
-        validOrder = validOrder.concat(shuffle(missing));
-        state.order = validOrder;
+        var complete = validOrder.length === ids.length;
+        if (state.orderVersion !== ORDER_VERSION || !complete) {
+          state.order = buildStructuredOrder(data);
+          state.orderVersion = ORDER_VERSION;
+          state.idxByView = { practice: 0, wrong: 0 };
+        } else {
+          state.order = validOrder;
+        }
         save();
 
         $("thValue").textContent = state.threshold;
