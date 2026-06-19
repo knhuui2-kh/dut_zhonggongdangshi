@@ -13,11 +13,11 @@
 
   var state = {
     all: [],
+    byId: {},         // origId -> 题目
+    order: [],        // 固定随机顺序（origId 数组），首次生成后持久化
     deck: [],         // 当前正在刷的题目序列
     idx: 0,
     view: "practice", // practice | wrong | settings
-    mode: "rand",     // seq | rand（默认随机）
-    filter: "all",
     threshold: 2,     // 错题需连续答对几次才移出错题本
     cardLocked: false,// 当前卡片本次是否已作答
     records: {},      // origId -> { answer, correct }
@@ -30,9 +30,9 @@
     try {
       var d = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
       state.records = d.records || {};
-      state.mode = d.mode || "rand";
-      state.filter = d.filter || "all";
       state.threshold = d.threshold >= 1 ? d.threshold : 2;
+      state.order = Array.isArray(d.order) ? d.order : [];
+      state.idxByView = d.idxByView || { practice: 0, wrong: 0 };
       // 错题：兼容旧版布尔值，统一为剩余需答对次数
       state.wrong = {};
       var w = d.wrong || {};
@@ -46,7 +46,7 @@
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
         records: state.records, wrong: state.wrong,
-        mode: state.mode, filter: state.filter, threshold: state.threshold,
+        threshold: state.threshold, order: state.order, idxByView: state.idxByView,
       }));
     } catch (e) {}
   }
@@ -91,16 +91,13 @@
   }
 
   /* ---------- 牌组构建 ---------- */
+  // 题库牌组：全部题目，按固定随机顺序（state.order）排列
   function practiceDeck() {
-    var arr = state.all;
-    if (state.filter !== "all") {
-      arr = arr.filter(function (q) { return q.type === state.filter; });
-    }
-    return state.mode === "rand" ? shuffle(arr) : arr.slice();
+    return state.order.map(function (id) { return state.byId[id]; }).filter(Boolean);
   }
+  // 错题牌组：错题集合，沿用同一固定顺序
   function wrongDeck() {
-    var arr = state.all.filter(function (q) { return state.wrong[q.origId]; });
-    return state.mode === "rand" ? shuffle(arr) : arr;
+    return practiceDeck().filter(function (q) { return state.wrong[q.origId]; });
   }
 
   /* ---------- 顶栏 / 标签状态 ---------- */
@@ -319,6 +316,7 @@
     if (n < 0 || n >= state.deck.length) return;
     state.idx = n;
     state.idxByView[state.view] = n;
+    save();
     renderCard();
   }
   function jumpTo(num) {
@@ -326,6 +324,7 @@
     if (isNaN(n) || n < 1 || n > state.deck.length) { flash("题号范围 1–" + state.deck.length); return; }
     state.idx = n - 1;
     state.idxByView[state.view] = state.idx;
+    save();
     showView("practice");
   }
 
@@ -349,14 +348,6 @@
   }
 
   /* ---------- 事件 ---------- */
-  function setMode(mode) {
-    state.mode = mode;
-    $("modeSeq").classList.toggle("active", mode === "seq");
-    $("modeRand").classList.toggle("active", mode === "rand");
-    save();
-    state.idxByView = { practice: 0, wrong: 0 };
-  }
-
   function setThreshold(n) {
     n = Math.max(1, Math.min(9, n || 1));
     state.threshold = n;
@@ -370,19 +361,13 @@
     $("jumpBtn").addEventListener("click", function () { jumpTo($("jumpInput").value); });
     $("jumpInput").addEventListener("keydown", function (e) { if (e.key === "Enter") jumpTo(this.value); });
 
-    $("modeSeq").addEventListener("click", function () { setMode("seq"); });
-    $("modeRand").addEventListener("click", function () { setMode("rand"); });
-
     $("thMinus").addEventListener("click", function () { setThreshold(state.threshold - 1); });
     $("thPlus").addEventListener("click", function () { setThreshold(state.threshold + 1); });
-    $("typeFilter").addEventListener("change", function () {
-      state.filter = this.value; save();
-      state.idxByView.practice = 0;
-    });
     $("resetBtn").addEventListener("click", function () {
       if (confirm("确定清空全部答题进度与错题本？不可撤销。")) {
-        state.records = {}; state.wrong = {}; save();
+        state.records = {}; state.wrong = {};
         state.idxByView = { practice: 0, wrong: 0 };
+        save();
         showView("practice");
       }
     });
@@ -422,9 +407,22 @@
       .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
       .then(function (data) {
         state.all = data;
-        $("typeFilter").value = state.filter;
-        $("modeSeq").classList.toggle("active", state.mode === "seq");
-        $("modeRand").classList.toggle("active", state.mode === "rand");
+        state.byId = {};
+        data.forEach(function (q) { state.byId[q.origId] = q; });
+
+        // 固定随机顺序：首次生成并持久化；之后始终沿用，切换 tab 不重洗。
+        // 同时补齐题库新增/缺失的题目，保证可刷题数为全部最大值。
+        var present = {};
+        var validOrder = state.order.filter(function (id) {
+          if (state.byId[id] && !present[id]) { present[id] = true; return true; }
+          return false;
+        });
+        var missing = data.map(function (q) { return q.origId; })
+          .filter(function (id) { return !present[id]; });
+        validOrder = validOrder.concat(shuffle(missing));
+        state.order = validOrder;
+        save();
+
         $("thValue").textContent = state.threshold;
         $("metaInfo").textContent = "题库共 " + data.length + " 题";
         bindEvents();

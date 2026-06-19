@@ -18,29 +18,12 @@
 
       <div id="settingsView" class="settings hidden">
         <div class="set-group">
-          <span class="set-label">刷题模式</span>
-          <div class="set-row">
-            <button id="modeRand" class="chip active">随机</button>
-            <button id="modeSeq" class="chip">顺序</button>
-          </div>
-        </div>
-        <div class="set-group">
           <span class="set-label">错题答对几次后移出错题本</span>
           <div class="set-row">
             <button id="thMinus" class="btn-ghost step">−</button>
             <span id="thValue" class="th-value">2</span>
             <button id="thPlus" class="btn-ghost step">+</button>
           </div>
-        </div>
-        <div class="set-group">
-          <span class="set-label">题型筛选</span>
-          <select id="typeFilter" class="select">
-            <option value="all">全部题型</option>
-            <option value="single">单选题</option>
-            <option value="multiple">多选题</option>
-            <option value="judge">判断题</option>
-            <option value="blank">填空题</option>
-          </select>
         </div>
         <div class="set-group">
           <span class="set-label">跳转到题号</span>
@@ -56,7 +39,7 @@
           </div>
         </div>
         <p class="set-meta" id="metaInfo">题库加载中…</p>
-        <p class="set-meta">答题进度仅存于本机浏览器，不上传。</p>
+        <p class="set-meta">题目顺序在首次打开时随机生成并固定保存，答题进度仅存于本机浏览器，不上传。</p>
       </div>
     </main>
 
