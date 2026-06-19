@@ -26,6 +26,7 @@
     view: "practice", // practice | wrong | settings
     threshold: 2,     // 错题需连续答对几次才移出错题本
     cardLocked: false,// 当前卡片本次是否已作答
+    wrongPending: null,// 错题本中刚作答、待前进时处理的题 origId
     records: {},      // origId -> { answer, correct }
     wrong: {},        // origId -> 剩余需答对次数
     idxByView: { practice: 0, wrong: 0 },
@@ -150,7 +151,9 @@
     $("navrow").classList.toggle("hidden", navHidden);
     if (!navHidden) {
       $("prevBtn").disabled = state.idx <= 0;
-      $("nextBtn").disabled = state.idx >= total - 1;
+      // 错题本中有待处理题时，"下一题"始终可用（即便最后一题，也需点它触发移出/后移）
+      var pending = state.view === "wrong" && state.wrongPending != null;
+      $("nextBtn").disabled = state.idx >= total - 1 && !pending;
     }
   }
 
@@ -271,6 +274,8 @@
       // 答错：重置为需答对 threshold 次
       state.wrong[q.origId] = state.threshold;
     }
+    // 错题本中作答：标记本题待处理（前进时移出或重新插入到后面）
+    if (state.view === "wrong") state.wrongPending = q.origId;
     save();
     showAnswered(q, state.records[q.origId]);
     refreshChrome();
@@ -339,7 +344,33 @@
   }
 
   /* ---------- 导航 / 视图 ---------- */
+  // 错题本中作答后前进：已掌握(移出错题)的题从牌组删除并实时消失；
+  // 未掌握的题重新插入到当前位置之后的随机处，本轮内还会再遇到。
+  function commitWrongMutation() {
+    var id = state.wrongPending;
+    state.wrongPending = null;
+    var i = state.deck.findIndex(function (q) { return q.origId === id; });
+    if (i === -1) return;
+    state.deck.splice(i, 1); // 先移出当前位置
+    if (state.wrong[id]) {
+      var rest = state.deck.length;
+      var lo = Math.min(i + 1, rest); // 至少排到当前题之后
+      var pos = lo + Math.floor(Math.random() * (rest - lo + 1));
+      state.deck.splice(pos, 0, state.byId[id]);
+    }
+  }
+
   function go(delta) {
+    // 错题本中有待处理题：前进时先变更牌组（删除/后移），停留在同一索引看下一题
+    if (state.view === "wrong" && state.wrongPending != null && delta > 0) {
+      commitWrongMutation();
+      if (state.deck.length === 0) { renderCard(); return; }
+      state.idx = Math.min(state.idx, state.deck.length - 1);
+      state.idxByView.wrong = state.idx;
+      renderCard();
+      return;
+    }
+    state.wrongPending = null;
     var n = state.idx + delta;
     if (n < 0 || n >= state.deck.length) return;
     state.idx = n;
@@ -365,6 +396,7 @@
 
   function showView(view) {
     state.view = view;
+    state.wrongPending = null; // 切换视图时丢弃未前进的待处理标记
     if (view === "settings") {
       $("card").classList.add("hidden");
       $("settingsView").classList.remove("hidden");
