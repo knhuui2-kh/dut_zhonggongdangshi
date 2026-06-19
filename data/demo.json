@@ -1,6 +1,6 @@
 [
  {
-  "id": 1,
+  "pdfId": 1,
   "type": "single",
   "errorRate": "4.73%",
   "points": [
@@ -29,7 +29,7 @@
   "origId": 1
  },
  {
-  "id": 2,
+  "pdfId": 2,
   "type": "single",
   "errorRate": "5.97%",
   "points": [
@@ -58,7 +58,7 @@
   "origId": 2
  },
  {
-  "id": 3,
+  "pdfId": 3,
   "type": "single",
   "errorRate": "9.27%",
   "points": [
@@ -87,7 +87,7 @@
   "origId": 3
  },
  {
-  "id": 4,
+  "pdfId": 4,
   "type": "single",
   "errorRate": "3.37%",
   "points": [
@@ -117,7 +117,7 @@
   "origId": 4
  },
  {
-  "id": 5,
+  "pdfId": 5,
   "type": "single",
   "errorRate": "17.60%",
   "points": [
@@ -142,7 +142,7 @@
   "origId": 5
  },
  {
-  "id": 6,
+  "pdfId": 6,
   "type": "single",
   "errorRate": "7.76%",
   "points": [
@@ -167,7 +167,7 @@
   "origId": 6
  },
  {
-  "id": 7,
+  "pdfId": 7,
   "type": "single",
   "errorRate": "91.49%",
   "points": [
@@ -197,7 +197,7 @@
   "origId": 7
  },
  {
-  "id": 8,
+  "pdfId": 8,
   "type": "single",
   "errorRate": "3.45%",
   "points": [
@@ -222,7 +222,7 @@
   "origId": 8
  },
  {
-  "id": 9,
+  "pdfId": 31,
   "type": "multiple",
   "errorRate": "1.86%",
   "points": [
@@ -247,7 +247,7 @@
   "origId": 31
  },
  {
-  "id": 10,
+  "pdfId": 32,
   "type": "multiple",
   "errorRate": "2.86%",
   "points": [
@@ -277,7 +277,7 @@
   "origId": 32
  },
  {
-  "id": 11,
+  "pdfId": 33,
   "type": "multiple",
   "errorRate": "66.56%",
   "points": [
@@ -307,7 +307,7 @@
   "origId": 33
  },
  {
-  "id": 12,
+  "pdfId": 34,
   "type": "multiple",
   "errorRate": "9.59%",
   "points": [
@@ -337,7 +337,7 @@
   "origId": 34
  },
  {
-  "id": 13,
+  "pdfId": 35,
   "type": "multiple",
   "errorRate": "29.90%",
   "points": [
@@ -366,7 +366,7 @@
   "origId": 35
  },
  {
-  "id": 14,
+  "pdfId": 36,
   "type": "multiple",
   "errorRate": "3.69%",
   "points": [
@@ -396,7 +396,7 @@
   "origId": 36
  },
  {
-  "id": 15,
+  "pdfId": 37,
   "type": "multiple",
   "errorRate": "35.22%",
   "points": [
@@ -426,7 +426,7 @@
   "origId": 37
  },
  {
-  "id": 16,
+  "pdfId": 61,
   "type": "judge",
   "errorRate": "0.61%",
   "points": [
@@ -447,7 +447,7 @@
   "origId": 61
  },
  {
-  "id": 17,
+  "pdfId": 62,
   "type": "judge",
   "errorRate": "43.20%",
   "points": [
@@ -469,7 +469,7 @@
   "origId": 62
  },
  {
-  "id": 18,
+  "pdfId": 63,
   "type": "judge",
   "errorRate": "95.65%",
   "points": [
@@ -491,7 +491,7 @@
   "origId": 63
  },
  {
-  "id": 19,
+  "pdfId": 64,
   "type": "judge",
   "errorRate": "11.70%",
   "points": [
@@ -513,7 +513,7 @@
   "origId": 64
  },
  {
-  "id": 20,
+  "pdfId": 65,
   "type": "judge",
   "errorRate": "0.26%",
   "points": [
@@ -534,7 +534,18 @@
   "origId": 65
  },
  {
-  "id": 21,
+  "pdfId": 81,
+  "type": "blank",
+  "errorRate": "0.27%",
+  "points": [
+   "发展党员工作的总要求"
+  ],
+  "question": "发展党员工作的总要求是控制总量、优化结构、（）、发挥作用。",
+  "answer": "提高质量",
+  "origId": 81
+ },
+ {
+  "pdfId": 82,
   "type": "blank",
   "errorRate": "17.17%",
   "points": [
@@ -545,7 +556,7 @@
   "origId": 82
  },
  {
-  "id": 22,
+  "pdfId": 83,
   "type": "blank",
   "errorRate": "22.03%",
   "points": [
@@ -556,7 +567,7 @@
   "origId": 83
  },
  {
-  "id": 23,
+  "pdfId": 84,
   "type": "blank",
   "errorRate": "0.62%",
   "points": [
@@ -567,7 +578,7 @@
   "origId": 84
  },
  {
-  "id": 24,
+  "pdfId": 85,
   "type": "blank",
   "errorRate": "0.18%",
   "points": [
@@ -576,16 +587,5 @@
   "question": "邓小平说，社会主义最大的优越性就是（）。",
   "answer": "共同富裕",
   "origId": 85
- },
- {
-  "id": 25,
-  "type": "blank",
-  "errorRate": "2.25%",
-  "points": [
-   "“一国两制”方针的形成"
-  ],
-  "question": "（）首次明确提出“一个国家，两种制度”的概念。",
-  "answer": "邓小平",
-  "origId": 86
  }
 ]

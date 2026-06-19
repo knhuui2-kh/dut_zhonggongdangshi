@@ -17,17 +17,17 @@
 index.html          入口页面
 css/style.css       样式
 js/app.js           逻辑（题库加载、判分、存储）
-data/demo.json      25 题演示题库（当前启用）
-data/questions.json 全量题库（解析自 PDF，1486 题）
+data/questions.json 全量题库（当前启用，1486 题）
+data/demo.json      25 题演示题库
 scripts/            题库解析脚本（开发用，不影响网站运行）
 ```
 
-## 切换到全量题库
+## 切换题库
 
 编辑 `js/app.js` 顶部：
 
 ```js
-var DATA_FILE = "data/demo.json";   // 改为 "data/questions.json"
+var DATA_FILE = "data/questions.json";  // 全量；改 "data/demo.json" 用演示题库
 ```
 
 ## 本地预览
@@ -41,11 +41,15 @@ python -m http.server 8000
 
 ## 重新生成题库
 
+使用 `-layout` 模式可保留正确的阅读顺序，避免填空题文字错乱：
+
 ```bash
-pdftotext -enc UTF-8 "中共党史409页题库.pdf" data/raw.txt
-python scripts/parse_questions.py data/raw.txt data/questions.json
+pdftotext -enc UTF-8 -layout "中共党史409页题库.pdf" data/raw_layout.txt
+python scripts/parse_questions.py data/raw_layout.txt data/questions.json
 python scripts/make_demo.py
 ```
+
+`parse_questions.py` 会为每题分配全局唯一的 `origId`（PDF 按题型分段重复编号，不能直接作主键），网站以此记录答题进度与错题。
 
 ## 说明
 

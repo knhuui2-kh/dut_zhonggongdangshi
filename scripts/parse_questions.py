@@ -82,7 +82,7 @@ def parse_block(num, qtype, body):
     error_rate, points, _ = parse_tail(body)
 
     q = {
-        "id": int(num),
+        "pdfId": int(num),
         "type": TYPE_MAP[qtype],
         "errorRate": error_rate,
         "points": points,
@@ -144,9 +144,13 @@ def main():
     print(f"解析成功: {len(questions)} 题, 跳过: {skipped}")
     print(f"题型分布: {dict(counts)}")
 
+    # 分配全局唯一 origId（PDF 按题型分段重复编号，不能直接用作主键）
+    for i, q in enumerate(questions, 1):
+        q["origId"] = i
+
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(questions, f, ensure_ascii=False, indent=1)
-    print(f"已写入: {out_path}")
+    print(f"已写入: {out_path}（origId 1–{len(questions)} 全局唯一）")
 
 
 if __name__ == "__main__":

@@ -4,3 +4,4 @@ scripts/__pycache__/
 
 # PDF 提取的原始文本（可由 pdftotext 重新生成，体积大）
 data/raw.txt
+data/raw_layout.txt

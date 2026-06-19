@@ -71,9 +71,26 @@ html, body {
   padding: 20px;
   display: flex;
   flex-direction: column;
+  max-height: 100%;
+  overflow: hidden;
 }
 
-.q-head { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+/* 题头固定，保证“单选/多选”等标签始终可见 */
+.q-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+/* 题干+选项+反馈：超长时此区域内部滚动，不挤掉题头 */
+.card-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 .type-tag {
   background: var(--red);
   color: #fff;

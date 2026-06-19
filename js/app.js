@@ -6,7 +6,7 @@
 (function () {
   "use strict";
 
-  var DATA_FILE = "data/demo.json"; // 全量时改为 "data/questions.json"
+  var DATA_FILE = "data/questions.json"; // 全量 1486 题（demo: data/demo.json）
   var STORE_KEY = "zgds_quiz_v1";
   var TYPE_LABEL = { single: "单选题", multiple: "多选题", judge: "判断题", blank: "填空题" };
   var VIEW_TITLE = { practice: "题库挑战", wrong: "错题本", settings: "设置" };
@@ -156,12 +156,14 @@
     }
     card.appendChild(head);
 
-    card.appendChild(el("p", "q-text", q.question));
+    // 题干/选项/反馈放入可滚动主体，题头固定
+    var body = el("div", "card-body");
+    body.appendChild(el("p", "q-text", q.question));
 
-    if (q.type === "blank") renderBlank(card, q);
-    else renderChoices(card, q);
+    if (q.type === "blank") renderBlank(body, q);
+    else renderChoices(body, q);
 
-    var fb = el("div", "feedback"); fb.id = "feedback"; card.appendChild(fb);
+    var fb = el("div", "feedback"); fb.id = "feedback"; body.appendChild(fb);
 
     // 多选/填空需要提交按钮；单选/判断点击即判分
     if (q.type === "multiple" || q.type === "blank") {
@@ -169,8 +171,10 @@
       var submit = el("button", "btn", "提交"); submit.id = "submitBtn";
       submit.addEventListener("click", onSubmit);
       actions.appendChild(submit);
-      card.appendChild(actions);
+      body.appendChild(actions);
     }
+
+    card.appendChild(body);
 
     if (rec) { state.cardLocked = true; showAnswered(q, rec); }
     refreshChrome();

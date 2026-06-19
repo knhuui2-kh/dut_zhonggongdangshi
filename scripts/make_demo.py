@@ -31,10 +31,7 @@ for t, n in plan:
     demo.extend(by_type[t][:n])
 demo.extend(clean_blanks[:5])
 
-# 重新编号便于 demo 展示（保留原 id 到 origId）
-for i, q in enumerate(demo, 1):
-    q["origId"] = q["id"]
-    q["id"] = i
+# origId 已由 parse_questions.py 分配为全局唯一，demo 直接沿用
 
 json.dump(demo, open("data/demo.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print(f"demo 题数: {len(demo)}")
@@ -43,4 +40,4 @@ print("题型分布:", dict(Counter(q["type"] for q in demo)))
 print(f"可用干净填空题总数: {len(clean_blanks)}")
 for q in demo:
     if q["type"] == "blank":
-        print(f"  填空#{q['id']}(orig {q['origId']}): {q['question']} => {q['answer']}")
+        print(f"  填空 origId={q['origId']}: {q['question']} => {q['answer']}")
