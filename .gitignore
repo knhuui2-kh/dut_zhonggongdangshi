@@ -1,0 +1,6 @@
+# 编译/中间产物
+scripts/__pycache__/
+*.pyc
+
+# PDF 提取的原始文本（可由 pdftotext 重新生成，体积大）
+data/raw.txt

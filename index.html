@@ -1,11 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中共党史刷题</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <p>Hello,World!</p>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1 class="brand">🚩 中共党史刷题</h1>
+      <nav class="tabs" role="tablist">
+        <button class="tab active" data-view="practice" role="tab">刷题</button>
+        <button class="tab" data-view="wrong" role="tab">错题本 <span id="wrongCount" class="badge">0</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- 刷题视图 -->
+    <section id="practiceView" class="view">
+      <div class="toolbar">
+        <div class="toolbar-group">
+          <span class="toolbar-label">模式</span>
+          <button id="modeSeq" class="chip active">顺序</button>
+          <button id="modeRand" class="chip">随机</button>
+        </div>
+        <div class="toolbar-group">
+          <span class="toolbar-label">题型</span>
+          <select id="typeFilter" class="select">
+            <option value="all">全部</option>
+            <option value="single">单选题</option>
+            <option value="multiple">多选题</option>
+            <option value="judge">判断题</option>
+            <option value="blank">填空题</option>
+          </select>
+        </div>
+        <div class="toolbar-group stats">
+          <span>进度 <strong id="progressText">0/0</strong></span>
+          <span>正确率 <strong id="accuracyText">—</strong></span>
+        </div>
+        <button id="resetBtn" class="btn-ghost" title="清空本地进度">重置进度</button>
+      </div>
+
+      <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+
+      <article id="card" class="card" aria-live="polite"><!-- 动态注入 --></article>
+
+      <div class="nav">
+        <button id="prevBtn" class="btn">‹ 上一题</button>
+        <div class="jump">
+          <input id="jumpInput" class="jump-input" type="number" min="1" inputmode="numeric" aria-label="跳转到题号">
+          <button id="jumpBtn" class="btn-ghost">跳转</button>
+        </div>
+        <button id="nextBtn" class="btn">下一题 ›</button>
+      </div>
+    </section>
+
+    <!-- 错题本视图 -->
+    <section id="wrongView" class="view hidden">
+      <div class="toolbar">
+        <h2 class="view-title">错题本</h2>
+        <div class="toolbar-group">
+          <button id="practiceWrongBtn" class="btn">练习错题</button>
+          <button id="clearWrongBtn" class="btn-ghost">清空错题</button>
+        </div>
+      </div>
+      <div id="wrongList" class="wrong-list"><!-- 动态注入 --></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span id="metaInfo">题库加载中…</span>
+    <span class="footer-sep">·</span>
+    <span>数据存储于浏览器本地，不上传</span>
+  </footer>
+
+  <script src="js/app.js"></script>
 </body>
 </html>
